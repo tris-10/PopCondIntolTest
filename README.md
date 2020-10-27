@@ -10,9 +10,9 @@ Further information to come.
 ### Download PCIT files for test fit on gnomAD v2.1.
 
 [Chrom 1 PCIT](https://upenn.box.com/v/pcitChr1Tests) [(tbi)](https://upenn.box.com/v/pcitChr1Tabix),
-[Chrom 2 PCIT](https://upenn.box.com/v/pcitChr2Tests) [(tbi)](https://upenn.box.com/v/pcitChr2Tabix),  
+[Chrom 2 PCIT](https://upenn.box.com/v/pcitChr2Tests) [(tbi)](https://upenn.box.com/v/pcitChr2Tabix),
 [Chrom 3 PCIT](https://upenn.box.com/v/pcitChr3Tests) [(tbi)](https://upenn.box.com/v/pcitChr3Tabix),  \
-[Chrom 4 PCIT](https://upenn.box.com/v/pcitChr4Tests) [(tbi)](https://upenn.box.com/v/pcitChr4Tabix),  
+[Chrom 4 PCIT](https://upenn.box.com/v/pcitChr4Tests) [(tbi)](https://upenn.box.com/v/pcitChr4Tabix),
 [Chrom 5 PCIT](https://upenn.box.com/v/pcitChr5Tests) [(tbi)](https://upenn.box.com/v/pcitChr5Tabix),
 [Chrom 6 PCIT](https://upenn.box.com/v/pcitChr6Tests) [(tbi)](https://upenn.box.com/v/pcitChr6Tabix),  \
 [Chrom 7 PCIT](https://upenn.box.com/v/pcitChr7Tests) [(tbi)](https://upenn.box.com/v/pcitChr7Tabix),
