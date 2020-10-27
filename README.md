@@ -8,7 +8,7 @@ Further information to come.
 
 -----------------------------------------------------
 ### Download PCIT files for test fit on gnomAD v2.1.
-
+[Download Directory](https://upenn.box.com/v/genomeWidePCIT)  \
 [Chrom 1 PCIT](https://upenn.box.com/v/pcitChr1Tests) [(tbi)](https://upenn.box.com/v/pcitChr1Tabix),
 [Chrom 2 PCIT](https://upenn.box.com/v/pcitChr2Tests) [(tbi)](https://upenn.box.com/v/pcitChr2Tabix),
 [Chrom 3 PCIT](https://upenn.box.com/v/pcitChr3Tests) [(tbi)](https://upenn.box.com/v/pcitChr3Tabix),  \
