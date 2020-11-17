@@ -27,7 +27,7 @@ import scipy
 import scipy.stats as stats
 import time
 import datetime
-#import GenicIO
+import GenicIO
 LOG_RANK_COL = "logrank"
 LOG_RANK_PVAL_COL = "logrank_pValue"
 SUB_REGION_COL = "subRegion"
