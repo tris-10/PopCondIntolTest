@@ -1,0 +1,8 @@
+population	weight
+"AF_afr"	3.603578802
+"AF_amr"	37.04716981
+"AF_asj"	108.3310345
+"AF_eas"	20.13846154
+"AF_fin"	9.037974684
+"AF_nfe"	2.035242291
+"AF_oth"	28.875
