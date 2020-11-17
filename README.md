@@ -31,3 +31,139 @@ Further information to come.
 [Chrom 20 PCIT](https://upenn.box.com/v/pcitChr20Tests) [(tbi)](https://upenn.box.com/v/pcitChr20Tabix),
 [Chrom 21 PCIT](https://upenn.box.com/v/pcitChr21Tests) [(tbi)](https://upenn.box.com/v/pcitChr21Tabix),  \
 [Chrom 22 PCIT](https://upenn.box.com/v/pcitChr22Tests) [(tbi)](https://upenn.box.com/v/pcitChr22Tabix)
+
+
+## Running PCIT
+
+PCIT is a weighted and stratified log rank test to test for differences between the SFS within a given query window and the SFS estimated from intergenic neutral sequence across multiple ancestral populations. PCIT uses python 3.6 and standard libraries: `pysam, argparse, numpy, pandas, scipy, gzip, datetime, time.` You can find sample input files in the input directory of this repository. You can download the gnomad data here. ## [here]( https://gnomad.broadinstitute.org/downloads/)
+
+To run PCIT, it is largely a two-step process: 1.) extracting the selecting the neutral site frequency spectrum (SFS) 2.) running the test across the region(s) of interest.
+
+### Getting the neutral SFS
+
+Running to get the neutral regions across each chromosome using something like:
+
+```
+neutralDir=input/Neutral_r2.1.1/
+for chrom in {1..22}; do
+python src/extractMafTableFromVcf.py \
+  -v data/gnomad/gnomad.genomes.r2.1.1.sites.vcf.bgz \
+  -p input/popFiles/allPops.txt
+  -b ${neutralDir}byChrom/chr${chrom}_CoverageFilteredNeutralPassGW.bed \
+  -o ${neutralDir}byChrom/chr${chrom}_MafCoverageFilteredNeutralPassGW.txt;
+done
+```
+
+Where the usage:
+
+```
+python extractMafTableFromVcf.py --help
+usage: extractMafTableFromVcf.py [-h] [-b BEDFILENAME] [-o OUTPUTFILE]
+                                 [-p POPFILE] [-v VCFFILENAME] [--debug]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b BEDFILENAME, --bedFileName BEDFILENAME
+                        The bed file with the chromosome, start, end, and
+                        subregions columns defining the positions for scanning
+                        over.
+  -p POPFILE, --popFile POPFILE
+                        File with the populations, should include both
+                        weighted and unweighted sets
+  -v VCFFILENAME, --vcfFileName VCFFILENAME
+                        Input vcf file to be analyzed, must have corresponding
+                        tabix tbi file
+ -o OUTPUTFILE, --outputFile OUTPUTFILE
+                        The ouput file for the MAF table being created.
+  --debug
+```
+
+Then you can combine the files into one.
+```
+head -n1 ${neutralDir}byChrom/chr1_MafCoverageFilteredNeutralPassGW.txt >\
+      ${neutralDir}NeutralPopMafFiltered.txt;
+for chrom in {1..22}; do
+  echo $chrom;
+  grep -v CHROM ${neutralDir}byChrom/chr${chrom}_MafCoverageFilteredNeutralPassGW.txt  \
+    ${neutralDir}NeutralPopMafFiltered.txt;
+done
+```
+
+### Running PCIT test scan
+
+Then to run on that neutral file you just generated:
+```
+chrom=1
+outputDir=output/chr${chrom}/
+neutralDir=input/Neutral_r2.1.1/
+neutralFile=${neutralDir}NeutralPopMafFiltered.txt
+vcfFile=data/gnomad/gnomad.genomes.r2.1.1.sites.vcf.bgz
+popFileDir=input/popFiles/
+weightFile=${popFileDir}/GroupsIPW.txt
+bedFile=input/genomeWideScanBeds/chrom${chrom}Step1M.bed;
+lineCount=($(wc -l ${bedFile}));
+windSize=100
+python src/PCIT.py \
+  -v ${vcfFile} \
+  -b ${bedFile} \
+  -n ${neutralFile} \
+  --weightedPopFile ${weightFile} \
+  -o ${outputDir} \
+  -w ${windSize} \
+  -l 1;
+```
+
+With usage:
+
+```
+usage: PCIT.py [-h] [-b BEDFILENAME] [-n NEUTRALFILE] [-l LINEINDEX]
+               [-v VCFFILENAME] [-w WINDOWSIZE] [-p POPFILE]
+               [--weightedPopFile WEIGHTEDPOPFILE] [-t TOTPOSSPANNEDNEUTRAL]
+               [--dont-PASS] [-o OUTPUTDIR] [--debug]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b BEDFILENAME, --bedFileName BEDFILENAME
+                        The bed file with the chromosome, start, end, and
+                        subregions columns to run the scan over
+  -n NEUTRALFILE, --neutralFile NEUTRALFILE
+                        The neutral file name with tab seperated MAFs,
+                        typically created by extractSubPopData
+  -l LINEINDEX, --lineIndex LINEINDEX
+                        Line index for which region to read in over bed file,
+                        the idea is this allows for easy parallelization if
+                        you want to split up bed regions for each job. Default
+                        -1 will read in all regions.
+  -v VCFFILENAME, --vcfFileName VCFFILENAME
+                        Input vcf file to be analyzed (must have corresponding
+                        tabix tbi file)
+  -w WINDOWSIZE, --windowSize WINDOWSIZE
+                        Size of window to search around position
+  -p POPFILE, --popFile POPFILE
+                        File with the populations, seperate from the weighted
+                        set to be used in the combined analysis.
+  --weightedPopFile WEIGHTEDPOPFILE
+                        File with the populations and their weights
+  -t TOTPOSSPANNEDNEUTRAL, --totPosSpannedNeutral TOTPOSSPANNEDNEUTRAL
+                        Total number of positions spanned by neutral variants.
+                        This is not the number of neutral variants but the
+                        regions they represent because many sites are
+                        monomorphic, so the corresponding vcf the neutral
+                        sample was taken from will only have items for each
+                        variant found.
+  --dont-PASS           Variants must have quality PASS to be included
+  -o OUTPUTDIR, --outputDir OUTPUTDIR
+                        output file name or the directory for the MAF tables
+                        if running over a single region
+  --debug
+```
+
+In the end you’ll get a file that looks like:
+
+```
+CHROM   POS     AF      AF_afr  AF_amr … AF_negLog10P    AF_afr_negLog10P        AF_amr_negLog10P     …    StratLogRank_negLog10P  WeightStratLogRank      WeightStratLogRank_negLog10P
+1       1001    -2.812      -2.00     -1.121     2.60      1.64      0.882       3.850      -2.00  1.645
+...
+```
+
+For each position there is the within population log rank test statistic and the corresponding negative log_10 p-value, along with the stratified and weighted stratified log rank test and negative log_10 p-value.
