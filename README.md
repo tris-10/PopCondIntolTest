@@ -153,4 +153,4 @@ optional arguments:
   --debug
 ```
 
-This will output a file that has columns for the chromosome, position, statistics, and corresponding -log_10 p-values.  There is the within region being scanned population log rank test statistic and the corresponding negative log_10 p-value, along with the stratified and weighted stratified log rank test and negative log_10 p-value.
+This will output a file that has columns for the chromosome, position, statistics, and corresponding -log<sub>10</sub> p-values.  There is the within region being scanned population log rank test statistic and the corresponding negative log<sub>10</sub> p-value, along with the stratified and weighted stratified log rank test and negative log<sub>10</sub> p-value.
