@@ -35,13 +35,13 @@ Further information to come.
 
 ## Running PCIT
 
-PCIT is a weighted and stratified log rank test to test for differences between the SFS within a given query window and the SFS estimated from intergenic neutral sequence across multiple ancestral populations. PCIT uses python 3.6 and standard libraries: `pysam, argparse, numpy, pandas, scipy, gzip, datetime, time.` You can find sample input files in the input directory of this repository. You can download the gnomad data here. ## [here]( https://gnomad.broadinstitute.org/downloads/)
+PCIT is a weighted and stratified log rank test to test for differences between the SFS within a given query window and the SFS estimated from intergenic neutral sequence across multiple ancestral populations. PCIT uses python 3.6 and standard libraries: `pysam, argparse, numpy, pandas, scipy, gzip, datetime, time.` You can find sample input files in the input directory of this repository. You can download the gnomad data [here]( https://gnomad.broadinstitute.org/downloads/).
 
 To run PCIT, it is largely a two-step process: 1.) extracting the selecting the neutral site frequency spectrum (SFS) 2.) running the test across the region(s) of interest.
 
 ### Getting the neutral SFS
 
-Running to get the neutral regions across each chromosome using something like:
+In order to get the neutral SFS first specify a bed file [like this](https://github.com/tris-10/PopCondIntolTest/blob/master/input/Neutral_r2.1.1/byChrom/chr1_CoverageFilteredNeutralPassGW.bed) over neutral regions for the data set of interest, here we use gnomAD. Additionally, specify the populations you'll be testing in the [popFile](https://github.com/tris-10/PopCondIntolTest/blob/master/input/popFiles/allPops.txt). Running the script extractMafTableFromVcf.py to get the neutral regions across each chromosome, using something like:
 
 ```
 neutralDir=input/Neutral_r2.1.1/
@@ -54,7 +54,7 @@ python src/extractMafTableFromVcf.py \
 done
 ```
 
-Where the usage:
+Where the usage is:
 
 ```
 python extractMafTableFromVcf.py --help
@@ -78,7 +78,7 @@ optional arguments:
   --debug
 ```
 
-Then you can combine the files into one.
+The output will be a tab delimited file with the chromosome, filter, position, reference allele, alternate allele, and the minor allele frequency (MAF) for each population specified in the popFile.  Then you can combine the files into one file across all chromosomes, an example is [here](https://github.com/tris-10/PopCondIntolTest/blob/master/input/Neutral_r2.1.1/NeutralPopMafFiltered.txt).
 ```
 head -n1 ${neutralDir}byChrom/chr1_MafCoverageFilteredNeutralPassGW.txt >\
       ${neutralDir}NeutralPopMafFiltered.txt;
@@ -91,29 +91,24 @@ done
 
 ### Running PCIT test scan
 
-Then to run on that neutral file you just generated:
+To actually run the tests using the neutral file you just generated, you will also need to specify two population files, one that's the [weightedPopFile](https://github.com/tris-10/PopCondIntolTest/blob/master/input/popFiles/GroupsIPW.txt) used in the weighted stratified test statistic and then another one if you want to run the test separately, say on the combined populations ([like this](https://github.com/tris-10/PopCondIntolTest/blob/master/input/popFiles/Pop.txt)). The tests will be run over sliding windows centered at the position, the window is +/-(windSize/2) up and down stream of the test position. The [bedfile](https://github.com/tris-10/PopCondIntolTest/blob/master/input/genomeWideScanBeds/chrom1Step1M.bed) specifies the regions to test. For this example, every position in the first line  region (-l --lineIndex, default is -1 for all reigons).
 ```
 chrom=1
 outputDir=output/chr${chrom}/
 neutralDir=input/Neutral_r2.1.1/
-neutralFile=${neutralDir}NeutralPopMafFiltered.txt
-vcfFile=data/gnomad/gnomad.genomes.r2.1.1.sites.vcf.bgz
 popFileDir=input/popFiles/
-weightFile=${popFileDir}/GroupsIPW.txt
-bedFile=input/genomeWideScanBeds/chrom${chrom}Step1M.bed;
-lineCount=($(wc -l ${bedFile}));
-windSize=100
 python src/PCIT.py \
-  -v ${vcfFile} \
-  -b ${bedFile} \
-  -n ${neutralFile} \
-  --weightedPopFile ${weightFile} \
+  -v data/gnomad/gnomad.genomes.r2.1.1.sites.vcf.bgz \
+  -b input/genomeWideScanBeds/chrom${chrom}Step1M.bed \
+  -n ${neutralDir}NeutralPopMafFiltered.txt \
+  --weightedPopFile ${popFileDir}/GroupsIPW.txt \
+  -p ${popFileDir}/Pop.txt \
   -o ${outputDir} \
-  -w ${windSize} \
-  -l 1;
+  --windowSize 100 \
+  --lineIndex 1;
 ```
 
-With usage:
+With the usage is:
 
 ```
 usage: PCIT.py [-h] [-b BEDFILENAME] [-n NEUTRALFILE] [-l LINEINDEX]
@@ -158,12 +153,4 @@ optional arguments:
   --debug
 ```
 
-In the end you’ll get a file that looks like:
-
-```
-CHROM   POS     AF      AF_afr  AF_amr … AF_negLog10P    AF_afr_negLog10P        AF_amr_negLog10P     …    StratLogRank_negLog10P  WeightStratLogRank      WeightStratLogRank_negLog10P
-1       1001    -2.812      -2.00     -1.121     2.60      1.64      0.882       3.850      -2.00  1.645
-...
-```
-
-For each position there is the within population log rank test statistic and the corresponding negative log_10 p-value, along with the stratified and weighted stratified log rank test and negative log_10 p-value.
+This will output a file that has columns for the chromosome, position, statistics, and corresponding -log_10 p-values.  There is the within region being scanned population log rank test statistic and the corresponding negative log_10 p-value, along with the stratified and weighted stratified log rank test and negative log_10 p-value.
