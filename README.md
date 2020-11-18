@@ -153,4 +153,4 @@ optional arguments:
   --debug
 ```
 
-This will output a file that has columns for the chromosome, position, statistics, and corresponding -log<sub>10</sub> p-values.  There is the within region being scanned population log rank test statistic and the corresponding negative log<sub>10</sub> p-value, along with the stratified and weighted stratified log rank test and negative log<sub>10</sub> p-value.
+This will output a file that has columns for the chromosome, position, statistics, and corresponding -log<sub>10</sub> p-values for the statistics.  Results are for each position within region(s) being scanned, there are columns for each population's log rank test statistic and the corresponding -log<sub>10</sub> p-value, along with the stratified and weighted stratified log rank test and -log<sub>10</sub> p-value. Examples for the analysis run on gnomad V2.1 can be found in the [Download Directory](https://upenn.box.com/v/genomeWidePCIT).
